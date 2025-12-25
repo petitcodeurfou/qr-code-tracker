@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -35,12 +35,6 @@ function App() {
       setUser(JSON.parse(storedUser));
     }
   }, []);
-
-  useEffect(() => {
-    if (view === 'list' && user) {
-      loadQrCodes();
-    }
-  }, [view, user]);
 
   const handleLogin = (userData, authToken) => {
     setUser(userData);
@@ -95,7 +89,7 @@ function App() {
     }
   };
 
-  const loadQrCodes = async () => {
+  const loadQrCodes = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`${API_URL}/api/qr/list`, {
@@ -111,7 +105,13 @@ function App() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (view === 'list' && user) {
+      loadQrCodes();
+    }
+  }, [view, user, loadQrCodes]);
 
   const loadStats = async (shortId) => {
     setLoading(true);
