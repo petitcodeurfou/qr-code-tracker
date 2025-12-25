@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 import './App.css';
+
+// Fix pour les icônes Leaflet avec Webpack
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -229,6 +240,38 @@ function App() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {stats.scans.filter(scan => scan.latitude && scan.longitude).length > 0 && (
+                <div className="map-section">
+                  <h3>Carte des scans</h3>
+                  <MapContainer
+                    center={[
+                      stats.scans.find(s => s.latitude && s.longitude)?.latitude || 0,
+                      stats.scans.find(s => s.latitude && s.longitude)?.longitude || 0
+                    ]}
+                    zoom={2}
+                    style={{ height: '400px', width: '100%', borderRadius: '8px' }}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    {stats.scans
+                      .filter(scan => scan.latitude && scan.longitude)
+                      .map((scan) => (
+                        <Marker key={scan.id} position={[scan.latitude, scan.longitude]}>
+                          <Popup>
+                            <div>
+                              <strong>{scan.city || 'Inconnu'}, {scan.country || 'Inconnu'}</strong><br />
+                              IP: {scan.ip_address}<br />
+                              Date: {new Date(scan.scanned_at).toLocaleString('fr-FR')}
+                            </div>
+                          </Popup>
+                        </Marker>
+                      ))}
+                  </MapContainer>
                 </div>
               )}
 

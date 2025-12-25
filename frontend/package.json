@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "leaflet": "^1.9.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
+    "react-leaflet": "^4.2.1",
     "react-scripts": "5.0.1"
   },
   "scripts": {
