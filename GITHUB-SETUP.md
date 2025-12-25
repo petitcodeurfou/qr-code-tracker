@@ -27,7 +27,7 @@ Votre application est prête à être poussée vers GitHub et déployée sur Ver
 
    ```bash
    cd "C:\Users\maxim\projects\qr code generator"
-   git remote add origin https://github.com/VOTRE-USERNAME/qr-code-tracker.git
+   git remote add origin https://github.com/petitcodeurfou/qr-code-tracker.git
    git branch -M main
    git push -u origin main
    ```
