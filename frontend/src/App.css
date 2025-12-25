@@ -1,0 +1,408 @@
+.App {
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.app-header {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.app-header h1 {
+  color: #667eea;
+  font-size: 28px;
+  margin-bottom: 15px;
+}
+
+.app-header nav {
+  display: flex;
+  gap: 10px;
+}
+
+.app-header nav button {
+  padding: 10px 20px;
+  border: 2px solid #667eea;
+  background: white;
+  color: #667eea;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.app-header nav button:hover {
+  background: #f0f0ff;
+}
+
+.app-header nav button.active {
+  background: #667eea;
+  color: white;
+}
+
+.app-main {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.card h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #555;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.btn-primary {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: #f0f0ff;
+}
+
+.btn-small {
+  padding: 8px 16px;
+  border: 2px solid #667eea;
+  background: white;
+  color: #667eea;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-small:hover {
+  background: #f0f0ff;
+}
+
+.btn-small.btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+.btn-small.btn-primary:hover {
+  background: #5568d3;
+}
+
+.result-card {
+  margin-top: 30px;
+}
+
+.qr-display {
+  text-align: center;
+  margin: 20px 0;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.qr-display img {
+  max-width: 300px;
+  height: auto;
+}
+
+.qr-info {
+  margin: 20px 0;
+}
+
+.info-item {
+  margin-bottom: 15px;
+}
+
+.info-item strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.copy-field {
+  display: flex;
+  gap: 10px;
+}
+
+.copy-field input {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.copy-field button {
+  padding: 10px 20px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.copy-field button:hover {
+  background: #5568d3;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.qr-list {
+  display: grid;
+  gap: 15px;
+}
+
+.qr-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.qr-item-info h3 {
+  color: #333;
+  font-size: 16px;
+  margin-bottom: 5px;
+  word-break: break-all;
+}
+
+.qr-item-info p {
+  color: #666;
+  font-size: 14px;
+  margin: 3px 0;
+}
+
+.scan-count {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.qr-item-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.empty-state {
+  text-align: center;
+  color: #999;
+  padding: 40px;
+  font-size: 16px;
+}
+
+.back-button {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.back-button:hover {
+  background: #f0f0ff;
+}
+
+.stats-header {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.stat-box {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+  min-width: 200px;
+}
+
+.stat-box h3 {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.stat-box p {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+.qr-details p {
+  margin: 8px 0;
+  color: #555;
+}
+
+.country-stats {
+  margin: 30px 0;
+}
+
+.country-stats h3 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.country-list {
+  display: grid;
+  gap: 10px;
+}
+
+.country-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 15px;
+  background: #f9f9f9;
+  border-radius: 6px;
+}
+
+.country-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.country-count {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.scans-table {
+  margin-top: 30px;
+}
+
+.scans-table h3 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.scans-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.scans-table th {
+  background: #f0f0f0;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.scans-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  color: #666;
+}
+
+.scans-table tr:hover {
+  background: #f9f9f9;
+}
+
+.user-agent {
+  font-size: 12px;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 22px;
+  }
+
+  .stats-header {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .qr-item-actions {
+    margin-top: 15px;
+    width: 100%;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .scans-table {
+    overflow-x: auto;
+  }
+}
