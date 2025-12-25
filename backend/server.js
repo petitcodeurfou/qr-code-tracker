@@ -1,18 +1,22 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const { nanoid } = require('nanoid');
 const geoip = require('geoip-lite');
 const QRCode = require('qrcode');
 const { pool, initDatabase } = require('./database');
+const { authenticateToken, optionalAuth, signup, login, logout, getCurrentUser } = require('./auth');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000'
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 // Initialiser la base de données
 let dbInitialized = false;
@@ -42,8 +46,16 @@ function getClientIp(req) {
          req.socket.remoteAddress;
 }
 
-// Endpoint pour créer un nouveau code QR
-app.post('/api/qr/create', async (req, res) => {
+// === ROUTES D'AUTHENTIFICATION ===
+app.post('/api/auth/signup', signup);
+app.post('/api/auth/login', login);
+app.post('/api/auth/logout', logout);
+app.get('/api/auth/me', authenticateToken, getCurrentUser);
+
+// === ROUTES QR CODE ===
+
+// Endpoint pour créer un nouveau code QR (protégé)
+app.post('/api/qr/create', authenticateToken, async (req, res) => {
   try {
     const { targetUrl } = req.body;
 
@@ -58,10 +70,10 @@ app.post('/api/qr/create', async (req, res) => {
     // Créer l'URL de tracking
     const trackingUrl = `${process.env.BASE_URL}/track/${shortId}`;
 
-    // Insérer dans la base de données
+    // Insérer dans la base de données avec user_id
     const result = await pool.query(
-      'INSERT INTO qr_codes (short_id, target_url, creator_ip) VALUES ($1, $2, $3) RETURNING id',
-      [shortId, targetUrl, creatorIp]
+      'INSERT INTO qr_codes (short_id, target_url, creator_ip, user_id) VALUES ($1, $2, $3, $4) RETURNING id',
+      [shortId, targetUrl, creatorIp, req.userId]
     );
 
     // Générer le code QR
@@ -132,19 +144,19 @@ app.get('/track/:shortId', async (req, res) => {
   }
 });
 
-// Endpoint pour obtenir les statistiques d'un code QR
-app.get('/api/qr/:shortId/stats', async (req, res) => {
+// Endpoint pour obtenir les statistiques d'un code QR (protégé)
+app.get('/api/qr/:shortId/stats', authenticateToken, async (req, res) => {
   try {
     const { shortId } = req.params;
 
-    // Récupérer le code QR
+    // Récupérer le code QR et vérifier qu'il appartient à l'utilisateur
     const qrResult = await pool.query(
-      'SELECT * FROM qr_codes WHERE short_id = $1',
-      [shortId]
+      'SELECT * FROM qr_codes WHERE short_id = $1 AND user_id = $2',
+      [shortId, req.userId]
     );
 
     if (qrResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Code QR non trouvé' });
+      return res.status(404).json({ error: 'Code QR non trouvé ou accès non autorisé' });
     }
 
     const qrCode = qrResult.rows[0];
@@ -182,8 +194,8 @@ app.get('/api/qr/:shortId/stats', async (req, res) => {
   }
 });
 
-// Endpoint pour lister tous les codes QR
-app.get('/api/qr/list', async (req, res) => {
+// Endpoint pour lister tous les codes QR de l'utilisateur (protégé)
+app.get('/api/qr/list', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
@@ -194,9 +206,10 @@ app.get('/api/qr/list', async (req, res) => {
         COUNT(s.id) as scan_count
       FROM qr_codes q
       LEFT JOIN scans s ON q.id = s.qr_code_id
+      WHERE q.user_id = $1
       GROUP BY q.id
       ORDER BY q.created_at DESC
-    `);
+    `, [req.userId]);
 
     res.json({
       qrCodes: result.rows.map(row => ({

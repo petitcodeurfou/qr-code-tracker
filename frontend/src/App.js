@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import Auth from './Auth';
 import './App.css';
 
 // Fix pour les icônes Leaflet avec Webpack
@@ -15,6 +16,8 @@ L.Icon.Default.mergeOptions({
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [view, setView] = useState('create');
   const [targetUrl, setTargetUrl] = useState('');
   const [qrCodes, setQrCodes] = useState([]);
@@ -22,11 +25,46 @@ function App() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Vérifier si l'utilisateur est déjà connecté au chargement
   useEffect(() => {
-    if (view === 'list') {
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (view === 'list' && user) {
       loadQrCodes();
     }
-  }, [view]);
+  }, [view, user]);
+
+  const handleLogin = (userData, authToken) => {
+    setUser(userData);
+    setToken(authToken);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Erreur logout:', error);
+    }
+
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setToken(null);
+    setQrCodes([]);
+    setCurrentQr(null);
+    setStats(null);
+  };
 
   const createQrCode = async (e) => {
     e.preventDefault();
@@ -38,7 +76,9 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
+        credentials: 'include',
         body: JSON.stringify({ targetUrl }),
       });
 
@@ -58,7 +98,12 @@ function App() {
   const loadQrCodes = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/qr/list`);
+      const response = await fetch(`${API_URL}/api/qr/list`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
+      });
       const data = await response.json();
       setQrCodes(data.qrCodes);
     } catch (error) {
@@ -71,7 +116,12 @@ function App() {
   const loadStats = async (shortId) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/qr/${shortId}/stats`);
+      const response = await fetch(`${API_URL}/api/qr/${shortId}/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        credentials: 'include',
+      });
       const data = await response.json();
       setStats(data);
       setView('stats');
@@ -95,10 +145,23 @@ function App() {
     link.click();
   };
 
+  // Si l'utilisateur n'est pas connecté, afficher la page d'authentification
+  if (!user || !token) {
+    return <Auth onLogin={handleLogin} />;
+  }
+
   return (
     <div className="App">
       <header className="app-header">
-        <h1>Générateur de Codes QR avec Tracking</h1>
+        <div className="header-content">
+          <h1>Générateur de Codes QR avec Tracking</h1>
+          <div className="user-info">
+            <span className="user-email">{user.email}</span>
+            <button onClick={handleLogout} className="btn-logout">
+              Déconnexion
+            </button>
+          </div>
+        </div>
         <nav>
           <button
             className={view === 'create' ? 'active' : ''}

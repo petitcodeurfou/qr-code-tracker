@@ -14,7 +14,13 @@ FRONTEND_URL=https://qr-code-tracker-dusky.vercel.app
 BASE_URL=https://qr-code-tracker-dusky.vercel.app
 
 REACT_APP_API_URL=https://qr-code-tracker-dusky.vercel.app
+
+JWT_SECRET=generate-a-random-secret-key-here-min-32-chars
 ```
+
+**IMPORTANT pour JWT_SECRET** : Générez une clé secrète aléatoire forte. Vous pouvez utiliser :
+- Node.js : `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`
+- En ligne : https://www.uuidgenerator.net/
 
 ## Après avoir ajouté les variables :
 
