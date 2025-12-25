@@ -117,6 +117,23 @@ async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_suspicious_ips_address ON suspicious_ips(ip_address)
     `);
 
+    // Table des plages CIDR VPN (pour détection par ranges)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS vpn_cidr_ranges (
+        id SERIAL PRIMARY KEY,
+        cidr_range CIDR NOT NULL,
+        provider VARCHAR(100),
+        source VARCHAR(100),
+        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_matched TIMESTAMP
+      )
+    `);
+
+    // Index GIST pour recherche rapide de containment
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_vpn_cidr_ranges ON vpn_cidr_ranges USING GIST(cidr_range inet_ops)
+    `);
+
     console.log('✓ Tables de base de données créées avec succès');
   } catch (error) {
     console.error('Erreur lors de la création des tables:', error);

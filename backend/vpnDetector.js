@@ -6,7 +6,7 @@ class VPNDetector {
     this.DAILY_SCAN_LIMIT = 100; // Si une IP scanne 100+ fois par jour = VPN
   }
 
-  // Vérifier si l'IP est dans la liste noire
+  // Vérifier si l'IP est dans la liste noire (exact match)
   async isBlacklisted(ip) {
     try {
       const result = await pool.query(
@@ -26,6 +26,38 @@ class VPNDetector {
       return { isVPN: false };
     } catch (error) {
       console.error('Erreur isBlacklisted:', error);
+      return { isVPN: false };
+    }
+  }
+
+  // Vérifier si l'IP est dans une plage CIDR VPN
+  async isInCIDRRange(ip) {
+    try {
+      // PostgreSQL peut vérifier si une IP est contenue dans un CIDR avec l'opérateur <<
+      const result = await pool.query(
+        `SELECT id, provider, cidr_range FROM vpn_cidr_ranges
+         WHERE $1::inet << cidr_range
+         LIMIT 1`,
+        [ip]
+      );
+
+      if (result.rows.length > 0) {
+        // Mettre à jour last_matched
+        await pool.query(
+          'UPDATE vpn_cidr_ranges SET last_matched = CURRENT_TIMESTAMP WHERE id = $1',
+          [result.rows[0].id]
+        );
+        return {
+          isVPN: true,
+          provider: result.rows[0].provider,
+          method: 'cidr_range',
+          range: result.rows[0].cidr_range
+        };
+      }
+
+      return { isVPN: false };
+    } catch (error) {
+      console.error('Erreur isInCIDRRange:', error);
       return { isVPN: false };
     }
   }
@@ -120,19 +152,25 @@ class VPNDetector {
         return blacklistCheck;
       }
 
-      // 2. Vérifier la liste suspecte
+      // 2. Vérifier les plages CIDR (priorité haute)
+      const cidrCheck = await this.isInCIDRRange(ip);
+      if (cidrCheck.isVPN) {
+        return cidrCheck;
+      }
+
+      // 3. Vérifier la liste suspecte
       const suspiciousCheck = await this.checkSuspicious(ip);
       if (suspiciousCheck.isVPN) {
         return suspiciousCheck;
       }
 
-      // 3. Vérifier la fréquence (100+ scans/jour)
+      // 4. Vérifier la fréquence (100+ scans/jour)
       const dailyCheck = await this.checkDailyLimit(ip);
       if (dailyCheck.isVPN) {
         return dailyCheck;
       }
 
-      // 4. Vérifier le hostname (en arrière-plan, pas bloquant)
+      // 5. Vérifier le hostname (en arrière-plan, pas bloquant)
       // On lance ça mais on ne bloque pas dessus car c'est lent
       this.checkHostname(ip).then(hostnameCheck => {
         if (hostnameCheck.isVPN) {
@@ -217,6 +255,36 @@ class VPNDetector {
       }
     }
     console.log(`✓ ${imported}/${ips.length} IP VPN importées`);
+    return imported;
+  }
+
+  // Ajouter une plage CIDR à la base de données
+  async addCIDRRange(cidr, provider = 'Unknown', source = 'manual') {
+    try {
+      await pool.query(
+        `INSERT INTO vpn_cidr_ranges (cidr_range, provider, source)
+         VALUES ($1::cidr, $2, $3)
+         ON CONFLICT DO NOTHING`,
+        [cidr, provider, source]
+      );
+      console.log(`✓ CIDR ${cidr} ajouté (${provider})`);
+    } catch (error) {
+      console.error(`Erreur addCIDRRange ${cidr}:`, error);
+    }
+  }
+
+  // Importer des plages CIDR VPN depuis une liste
+  async importCIDRList(cidrs, provider, source) {
+    let imported = 0;
+    for (const cidr of cidrs) {
+      try {
+        await this.addCIDRRange(cidr, provider, source);
+        imported++;
+      } catch (error) {
+        console.error(`Erreur import CIDR ${cidr}:`, error);
+      }
+    }
+    console.log(`✓ ${imported}/${cidrs.length} plages CIDR VPN importées`);
     return imported;
   }
 }
