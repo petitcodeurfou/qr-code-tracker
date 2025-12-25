@@ -329,6 +329,8 @@ function App() {
                             <div>
                               <strong>{scan.city || 'Inconnu'}, {scan.country || 'Inconnu'}</strong><br />
                               IP: {scan.ip_address}<br />
+                              {scan.isp && <><strong>ISP:</strong> {scan.isp}<br /></>}
+                              {scan.is_vpn && <><strong>VPN:</strong> {scan.vpn_detection_method}<br /></>}
                               Date: {new Date(scan.scanned_at).toLocaleString('fr-FR')}
                             </div>
                           </Popup>
@@ -349,6 +351,7 @@ function App() {
                         <th>Date</th>
                         <th>IP</th>
                         <th>VPN</th>
+                        <th>ISP</th>
                         <th>Pays</th>
                         <th>Ville</th>
                         <th>User Agent</th>
@@ -368,6 +371,7 @@ function App() {
                               <span className="normal-badge">Non</span>
                             )}
                           </td>
+                          <td>{scan.isp || '-'}</td>
                           <td>{scan.country || '-'}</td>
                           <td>{scan.city || '-'}</td>
                           <td className="user-agent">{scan.user_agent}</td>

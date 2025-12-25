@@ -3,6 +3,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { nanoid } = require('nanoid');
 const geoip = require('geoip-lite');
+const axios = require('axios');
 const QRCode = require('qrcode');
 const { pool, initDatabase } = require('./database');
 const { authenticateToken, optionalAuth, signup, login, logout, getCurrentUser } = require('./auth');
@@ -120,30 +121,48 @@ app.get('/track/:shortId', async (req, res) => {
     const isVPN = vpnCheck.isVPN;
     const vpnMethod = vpnCheck.method;
 
-    // Obtenir la géolocalisation à partir de l'IP
-    const geo = geoip.lookup(ip);
-
+    // Obtenir la géolocalisation et l'ISP à partir de l'IP via ip-api.com
     let country = null;
     let city = null;
     let latitude = null;
     let longitude = null;
+    let isp = null;
 
-    if (geo) {
-      country = geo.country;
-      city = geo.city;
-      latitude = geo.ll[0];
-      longitude = geo.ll[1];
+    try {
+      // Utiliser ip-api.com pour obtenir des informations complètes incluant l'ISP
+      // API gratuite avec limite de 45 requêtes/minute
+      const response = await axios.get(`http://ip-api.com/json/${ip}?fields=status,country,city,lat,lon,isp`);
+
+      if (response.data && response.data.status === 'success') {
+        country = response.data.country;
+        city = response.data.city;
+        latitude = response.data.lat;
+        longitude = response.data.lon;
+        isp = response.data.isp;
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données IP:', error.message);
+
+      // Fallback sur geoip-lite si l'API échoue
+      const geo = geoip.lookup(ip);
+      if (geo) {
+        country = geo.country;
+        city = geo.city;
+        latitude = geo.ll[0];
+        longitude = geo.ll[1];
+      }
     }
 
-    // Enregistrer le scan avec information VPN
+    // Enregistrer le scan avec information VPN et ISP
     await pool.query(
-      `INSERT INTO scans (qr_code_id, ip_address, user_agent, country, city, latitude, longitude, is_vpn, vpn_detection_method)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [qrCode.id, ip, userAgent, country, city, latitude, longitude, isVPN, vpnMethod]
+      `INSERT INTO scans (qr_code_id, ip_address, user_agent, country, city, latitude, longitude, is_vpn, vpn_detection_method, isp)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [qrCode.id, ip, userAgent, country, city, latitude, longitude, isVPN, vpnMethod, isp]
     );
 
     const vpnLabel = isVPN ? ` [VPN DÉTECTÉ: ${vpnMethod}]` : '';
-    console.log(`✓ Scan enregistré pour ${shortId} depuis ${ip} (${country || 'Unknown'})${vpnLabel}`);
+    const ispLabel = isp ? ` - ISP: ${isp}` : '';
+    console.log(`✓ Scan enregistré pour ${shortId} depuis ${ip} (${country || 'Unknown'})${ispLabel}${vpnLabel}`);
 
     // Rediriger vers l'URL cible
     res.redirect(qrCode.target_url);

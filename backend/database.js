@@ -59,11 +59,12 @@ async function initDatabase() {
         longitude DECIMAL(11, 8),
         scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_vpn BOOLEAN DEFAULT FALSE,
-        vpn_detection_method VARCHAR(50)
+        vpn_detection_method VARCHAR(50),
+        isp VARCHAR(255)
       )
     `);
 
-    // Ajouter colonnes VPN si elles n'existent pas
+    // Ajouter colonnes VPN et ISP si elles n'existent pas
     await client.query(`
       DO $$
       BEGIN
@@ -78,6 +79,12 @@ async function initDatabase() {
           WHERE table_name='scans' AND column_name='vpn_detection_method'
         ) THEN
           ALTER TABLE scans ADD COLUMN vpn_detection_method VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='scans' AND column_name='isp'
+        ) THEN
+          ALTER TABLE scans ADD COLUMN isp VARCHAR(255);
         END IF;
       END $$;
     `);
