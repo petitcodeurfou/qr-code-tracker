@@ -8,14 +8,22 @@ Votre application intègre maintenant un système complet de détection VPN !
 
 Le système détecte automatiquement les VPN par :
 
-- **Liste noire** : Base de données d'IP VPN connues
+- **Plages CIDR** : 118 plages CIDR de VPN vérifiées (source: X4BNet)
+- **Liste noire IP** : Base de données d'IP VPN individuelles connues
 - **Fréquence d'utilisation** : IP qui scannent 100+ fois par jour
 - **Hostname DNS** : Détection via reverse lookup
 - **IP suspectes** : Tracking automatique
 
 ### 2. Tables de Base de Données
 
-**`vpn_ips`** - Liste noire d'IP VPN
+**`vpn_cidr_ranges`** - Plages CIDR VPN (NOUVELLE!)
+- cidr_range : Plage CIDR (ex: 45.83.223.0/24)
+- provider : Fournisseur VPN
+- source : Source de détection (known_vpn_list, etc.)
+- added_at : Date d'ajout
+- last_matched : Dernière correspondance trouvée
+
+**`vpn_ips`** - Liste noire d'IP VPN individuelles
 - ip_address : L'adresse IP
 - provider : Fournisseur VPN (NordVPN, ExpressVPN, etc.)
 - source : Source de détection (manual, auto, etc.)
@@ -30,7 +38,7 @@ Le système détecte automatiquement les VPN par :
 
 **`scans`** - Colonne ajoutée
 - is_vpn : Boolean (vrai si VPN détecté)
-- vpn_detection_method : Méthode de détection
+- vpn_detection_method : Méthode de détection (blacklist, cidr_range, high_frequency, etc.)
 
 ### 3. Affichage dans le Dashboard
 
@@ -86,26 +94,38 @@ DELETE /api/admin/vpn-ips/123.456.789.0
 
 ## Sources de Listes VPN Gratuites
 
-Vous pouvez télécharger des listes d'IP VPN sur :
+✅ **DÉJÀ IMPORTÉ** : 102 plages CIDR VPN réelles depuis X4BNet/lists_vpn !
 
-### 1. FireHOL IP Lists
+Vous pouvez télécharger plus de listes d'IP VPN sur :
+
+### 1. X4BNet VPN Lists ✅ IMPORTÉ
+- **URL** : https://github.com/X4BNet/lists_vpn
+- **Description** : Listes automatisées de VPN avec CIDR ranges
+- **Status** : 102 plages CIDR déjà importées dans votre base de données
+- Gratuit, mise à jour régulière
+
+### 2. FireHOL IP Lists
 - **URL** : https://github.com/firehol/blocklist-ipsets
 - **Fichiers** : `firehol_proxies.netset`, `firehol_webserver.netset`
 - Gratuit, mise à jour quotidienne
 
-### 2. IPsum
+### 3. IPsum
 - **URL** : https://github.com/stamparm/ipsum
 - Listes d'IP malveillantes incluant VPN/Proxy
 
-### 3. Tor Exit Nodes
+### 4. Tor Exit Nodes
 - **URL** : https://check.torproject.org/torbulkexitlist
 - Liste officielle des nœuds de sortie Tor
 
-### 4. ProxyCheck.io (Gratuit limité)
+### 5. IP2Proxy LITE
+- **URL** : https://lite.ip2location.com/ip2proxy-lite
+- Base de données gratuite VPN/proxy (format CSV)
+
+### 6. ProxyCheck.io (Gratuit limité)
 - **URL** : https://proxycheck.io
 - API : 1000 vérifications/jour gratuites
 
-### 5. Listes communautaires
+### 7. Listes communautaires
 - **GitHub** : Recherchez "VPN IP list" ou "proxy IP list"
 - Plusieurs repositories maintiennent des listes à jour
 
