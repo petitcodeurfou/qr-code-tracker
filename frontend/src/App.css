@@ -421,6 +421,33 @@
   background: #f9f9f9;
 }
 
+.scans-table tr.vpn-scan {
+  background: #fff3cd;
+}
+
+.scans-table tr.vpn-scan:hover {
+  background: #ffe69c;
+}
+
+.vpn-badge {
+  background: #dc3545;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: help;
+}
+
+.normal-badge {
+  background: #28a745;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .user-agent {
   font-size: 12px;
   max-width: 300px;

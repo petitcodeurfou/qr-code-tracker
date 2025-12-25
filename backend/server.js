@@ -6,7 +6,10 @@ const geoip = require('geoip-lite');
 const QRCode = require('qrcode');
 const { pool, initDatabase } = require('./database');
 const { authenticateToken, optionalAuth, signup, login, logout, getCurrentUser } = require('./auth');
+const VPNDetector = require('./vpnDetector');
 require('dotenv').config();
+
+const vpnDetector = new VPNDetector();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -112,6 +115,11 @@ app.get('/track/:shortId', async (req, res) => {
     const ip = getClientIp(req);
     const userAgent = req.headers['user-agent'] || 'Unknown';
 
+    // Détecter si c'est un VPN
+    const vpnCheck = await vpnDetector.detect(ip);
+    const isVPN = vpnCheck.isVPN;
+    const vpnMethod = vpnCheck.method;
+
     // Obtenir la géolocalisation à partir de l'IP
     const geo = geoip.lookup(ip);
 
@@ -127,14 +135,15 @@ app.get('/track/:shortId', async (req, res) => {
       longitude = geo.ll[1];
     }
 
-    // Enregistrer le scan
+    // Enregistrer le scan avec information VPN
     await pool.query(
-      `INSERT INTO scans (qr_code_id, ip_address, user_agent, country, city, latitude, longitude)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [qrCode.id, ip, userAgent, country, city, latitude, longitude]
+      `INSERT INTO scans (qr_code_id, ip_address, user_agent, country, city, latitude, longitude, is_vpn, vpn_detection_method)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [qrCode.id, ip, userAgent, country, city, latitude, longitude, isVPN, vpnMethod]
     );
 
-    console.log(`✓ Scan enregistré pour ${shortId} depuis ${ip} (${country || 'Unknown'})`);
+    const vpnLabel = isVPN ? ` [VPN DÉTECTÉ: ${vpnMethod}]` : '';
+    console.log(`✓ Scan enregistré pour ${shortId} depuis ${ip} (${country || 'Unknown'})${vpnLabel}`);
 
     // Rediriger vers l'URL cible
     res.redirect(qrCode.target_url);
@@ -227,6 +236,10 @@ app.get('/api/qr/list', authenticateToken, async (req, res) => {
   }
 });
 
+// === ROUTES ADMIN VPN ===
+const adminRoutes = require('./adminRoutes');
+app.use('/api/admin', adminRoutes);
+
 // Pour le développement local
 if (require.main === module) {
   initDatabase()
@@ -234,6 +247,7 @@ if (require.main === module) {
       app.listen(PORT, () => {
         console.log(`✓ Serveur démarré sur le port ${PORT}`);
         console.log(`✓ Base de données PostgreSQL (Neon) connectée`);
+        console.log(`✓ Système de détection VPN activé`);
       });
     })
     .catch(error => {

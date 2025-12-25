@@ -348,6 +348,7 @@ function App() {
                       <tr>
                         <th>Date</th>
                         <th>IP</th>
+                        <th>VPN</th>
                         <th>Pays</th>
                         <th>Ville</th>
                         <th>User Agent</th>
@@ -355,9 +356,18 @@ function App() {
                     </thead>
                     <tbody>
                       {stats.scans.map((scan) => (
-                        <tr key={scan.id}>
+                        <tr key={scan.id} className={scan.is_vpn ? 'vpn-scan' : ''}>
                           <td>{new Date(scan.scanned_at).toLocaleString('fr-FR')}</td>
                           <td>{scan.ip_address}</td>
+                          <td>
+                            {scan.is_vpn ? (
+                              <span className="vpn-badge" title={`Méthode: ${scan.vpn_detection_method}`}>
+                                VPN
+                              </span>
+                            ) : (
+                              <span className="normal-badge">Non</span>
+                            )}
+                          </td>
                           <td>{scan.country || '-'}</td>
                           <td>{scan.city || '-'}</td>
                           <td className="user-agent">{scan.user_agent}</td>

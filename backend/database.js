@@ -57,8 +57,64 @@ async function initDatabase() {
         city VARCHAR(100),
         latitude DECIMAL(10, 8),
         longitude DECIMAL(11, 8),
-        scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_vpn BOOLEAN DEFAULT FALSE,
+        vpn_detection_method VARCHAR(50)
       )
+    `);
+
+    // Ajouter colonnes VPN si elles n'existent pas
+    await client.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='scans' AND column_name='is_vpn'
+        ) THEN
+          ALTER TABLE scans ADD COLUMN is_vpn BOOLEAN DEFAULT FALSE;
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='scans' AND column_name='vpn_detection_method'
+        ) THEN
+          ALTER TABLE scans ADD COLUMN vpn_detection_method VARCHAR(50);
+        END IF;
+      END $$;
+    `);
+
+    // Table des IP VPN connues (liste noire)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS vpn_ips (
+        id SERIAL PRIMARY KEY,
+        ip_address VARCHAR(45) UNIQUE NOT NULL,
+        provider VARCHAR(100),
+        source VARCHAR(100),
+        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Index pour recherche rapide
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_vpn_ips_address ON vpn_ips(ip_address)
+    `);
+
+    // Table des IP suspectes (détection automatique)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS suspicious_ips (
+        id SERIAL PRIMARY KEY,
+        ip_address VARCHAR(45) UNIQUE NOT NULL,
+        scan_count INTEGER DEFAULT 1,
+        first_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_flagged_vpn BOOLEAN DEFAULT FALSE,
+        detection_reason VARCHAR(200)
+      )
+    `);
+
+    // Index pour recherche rapide
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_suspicious_ips_address ON suspicious_ips(ip_address)
     `);
 
     console.log('✓ Tables de base de données créées avec succès');
