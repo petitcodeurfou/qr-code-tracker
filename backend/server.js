@@ -280,6 +280,10 @@ app.get('/api/qr/list', authenticateToken, async (req, res) => {
 const adminRoutes = require('./adminRoutes');
 app.use('/api/admin', adminRoutes);
 
+// === ROUTES EMAIL TRACKING ===
+const emailRoutes = require('./emailRoutes');
+app.use('/api/email', emailRoutes);
+
 // Pour le développement local
 if (require.main === module) {
   initDatabase()

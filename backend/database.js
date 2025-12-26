@@ -183,6 +183,76 @@ async function initDatabase() {
       CREATE INDEX IF NOT EXISTS idx_vpn_cidr_ranges ON vpn_cidr_ranges USING GIST(cidr_range inet_ops)
     `);
 
+    // Table des campagnes email
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS email_campaigns (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        name VARCHAR(255) NOT NULL,
+        subject VARCHAR(500) NOT NULL,
+        from_email VARCHAR(255) NOT NULL,
+        from_name VARCHAR(255),
+        html_content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        sent_at TIMESTAMP,
+        total_recipients INTEGER DEFAULT 0,
+        total_sent INTEGER DEFAULT 0,
+        total_opened INTEGER DEFAULT 0,
+        total_clicked INTEGER DEFAULT 0
+      )
+    `);
+
+    // Table des emails envoyés
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS email_sends (
+        id SERIAL PRIMARY KEY,
+        campaign_id INTEGER REFERENCES email_campaigns(id) ON DELETE CASCADE,
+        recipient_email VARCHAR(255) NOT NULL,
+        tracking_id VARCHAR(100) UNIQUE NOT NULL,
+        sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        first_opened_at TIMESTAMP,
+        open_count INTEGER DEFAULT 0,
+        click_count INTEGER DEFAULT 0,
+        last_activity_at TIMESTAMP
+      )
+    `);
+
+    // Index pour recherche rapide
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_email_sends_tracking ON email_sends(tracking_id)
+    `);
+
+    // Table des ouvertures d'emails
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS email_opens (
+        id SERIAL PRIMARY KEY,
+        email_send_id INTEGER REFERENCES email_sends(id) ON DELETE CASCADE,
+        opened_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        device_type VARCHAR(50),
+        os_name VARCHAR(100),
+        browser_name VARCHAR(100),
+        country VARCHAR(100),
+        city VARCHAR(100)
+      )
+    `);
+
+    // Table des clics d'emails
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS email_clicks (
+        id SERIAL PRIMARY KEY,
+        email_send_id INTEGER REFERENCES email_sends(id) ON DELETE CASCADE,
+        link_url TEXT NOT NULL,
+        link_label VARCHAR(255),
+        clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        device_type VARCHAR(50),
+        country VARCHAR(100)
+      )
+    `);
+
     console.log('✓ Tables de base de données créées avec succès');
   } catch (error) {
     console.error('Erreur lors de la création des tables:', error);
