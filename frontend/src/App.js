@@ -3,7 +3,6 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import Auth from './Auth';
-import EmailCampaign from './EmailCampaign';
 import './App.css';
 
 // Fix pour les icônes Leaflet avec Webpack
@@ -175,12 +174,6 @@ function App() {
             onClick={() => setView('list')}
           >
             Mes Codes QR
-          </button>
-          <button
-            className={view === 'email' ? 'active' : ''}
-            onClick={() => setView('email')}
-          >
-            📧 Emails
           </button>
         </nav>
       </header>
@@ -446,13 +439,6 @@ function App() {
               </div>
             </div>
           </div>
-        )}
-
-        {view === 'email' && (
-          <EmailCampaign
-            token={token}
-            onBack={() => setView('create')}
-          />
         )}
       </main>
     </div>
