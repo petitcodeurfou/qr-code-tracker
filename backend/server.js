@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const { nanoid } = require('nanoid');
 const geoip = require('geoip-lite');
 const axios = require('axios');
+const UAParser = require('ua-parser-js');
 const QRCode = require('qrcode');
 const { pool, initDatabase } = require('./database');
 const { authenticateToken, optionalAuth, signup, login, logout, getCurrentUser } = require('./auth');
@@ -115,6 +116,17 @@ app.get('/track/:shortId', async (req, res) => {
     const qrCode = qrResult.rows[0];
     const ip = getClientIp(req);
     const userAgent = req.headers['user-agent'] || 'Unknown';
+    const referrer = req.headers['referer'] || req.headers['referrer'] || null;
+
+    // Parser le User Agent pour extraire les informations de l'appareil
+    const parser = new UAParser(userAgent);
+    const deviceInfo = parser.getResult();
+
+    const deviceType = deviceInfo.device.type || 'desktop'; // mobile, tablet, desktop
+    const osName = deviceInfo.os.name || null;
+    const osVersion = deviceInfo.os.version || null;
+    const browserName = deviceInfo.browser.name || null;
+    const browserVersion = deviceInfo.browser.version || null;
 
     // Détecter si c'est un VPN
     const vpnCheck = await vpnDetector.detect(ip);
@@ -153,16 +165,18 @@ app.get('/track/:shortId', async (req, res) => {
       }
     }
 
-    // Enregistrer le scan avec information VPN et ISP
+    // Enregistrer le scan avec toutes les informations
     await pool.query(
-      `INSERT INTO scans (qr_code_id, ip_address, user_agent, country, city, latitude, longitude, is_vpn, vpn_detection_method, isp)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-      [qrCode.id, ip, userAgent, country, city, latitude, longitude, isVPN, vpnMethod, isp]
+      `INSERT INTO scans (qr_code_id, ip_address, user_agent, country, city, latitude, longitude, is_vpn, vpn_detection_method, isp, referrer, device_type, os_name, os_version, browser_name, browser_version)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+      [qrCode.id, ip, userAgent, country, city, latitude, longitude, isVPN, vpnMethod, isp, referrer, deviceType, osName, osVersion, browserName, browserVersion]
     );
 
     const vpnLabel = isVPN ? ` [VPN DÉTECTÉ: ${vpnMethod}]` : '';
     const ispLabel = isp ? ` - ISP: ${isp}` : '';
-    console.log(`✓ Scan enregistré pour ${shortId} depuis ${ip} (${country || 'Unknown'})${ispLabel}${vpnLabel}`);
+    const deviceLabel = `${deviceType} (${osName || 'Unknown'} - ${browserName || 'Unknown'})`;
+    const referrerLabel = referrer ? ` - Referrer: ${new URL(referrer).hostname}` : '';
+    console.log(`✓ Scan enregistré pour ${shortId} depuis ${ip} (${country || 'Unknown'})${ispLabel} - ${deviceLabel}${referrerLabel}${vpnLabel}`);
 
     // Rediriger vers l'URL cible
     res.redirect(qrCode.target_url);

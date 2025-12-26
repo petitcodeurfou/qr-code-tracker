@@ -342,34 +342,51 @@
   color: #555;
 }
 
-.country-stats {
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
   margin: 30px 0;
 }
 
-.country-stats h3 {
-  color: #333;
-  margin-bottom: 15px;
+.country-stats,
+.device-stats {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
 }
 
-.country-list {
+.country-stats h3,
+.device-stats h3 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.country-list,
+.device-list {
   display: grid;
   gap: 10px;
 }
 
-.country-item {
+.country-item,
+.device-item {
   display: flex;
   justify-content: space-between;
   padding: 12px 15px;
-  background: #f9f9f9;
+  background: white;
   border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.country-name {
+.country-name,
+.device-name {
   font-weight: 600;
   color: #333;
 }
 
-.country-count {
+.country-count,
+.device-count {
   color: #667eea;
   font-weight: 600;
 }
@@ -454,6 +471,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.direct-scan {
+  color: #999;
+  font-style: italic;
+  font-size: 13px;
 }
 
 @media (max-width: 768px) {

@@ -292,19 +292,46 @@ function App() {
                 </div>
               </div>
 
-              {stats.countryStats.length > 0 && (
-                <div className="country-stats">
-                  <h3>Scans par pays</h3>
-                  <div className="country-list">
-                    {stats.countryStats.map((country, index) => (
-                      <div key={index} className="country-item">
-                        <span className="country-name">{country.country || 'Inconnu'}</span>
-                        <span className="country-count">{country.count} scan{country.count !== 1 ? 's' : ''}</span>
-                      </div>
-                    ))}
+              <div className="stats-grid">
+                {stats.countryStats.length > 0 && (
+                  <div className="country-stats">
+                    <h3>Scans par pays</h3>
+                    <div className="country-list">
+                      {stats.countryStats.map((country, index) => (
+                        <div key={index} className="country-item">
+                          <span className="country-name">{country.country || 'Inconnu'}</span>
+                          <span className="country-count">{country.count} scan{country.count !== 1 ? 's' : ''}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+
+                {stats.scans.length > 0 && (
+                  <div className="device-stats">
+                    <h3>Types d'appareils</h3>
+                    <div className="device-list">
+                      {(() => {
+                        const deviceCounts = stats.scans.reduce((acc, scan) => {
+                          const type = scan.device_type || 'desktop';
+                          acc[type] = (acc[type] || 0) + 1;
+                          return acc;
+                        }, {});
+                        return Object.entries(deviceCounts).map(([type, count]) => (
+                          <div key={type} className="device-item">
+                            <span className="device-name">
+                              {type === 'mobile' && '📱 Mobile'}
+                              {type === 'tablet' && '📱 Tablette'}
+                              {type === 'desktop' && '💻 Ordinateur'}
+                            </span>
+                            <span className="device-count">{count} scan{count !== 1 ? 's' : ''}</span>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {stats.scans.filter(scan => scan.latitude && scan.longitude).length > 0 && (
                 <div className="map-section">
@@ -328,10 +355,18 @@ function App() {
                           <Popup>
                             <div>
                               <strong>{scan.city || 'Inconnu'}, {scan.country || 'Inconnu'}</strong><br />
-                              IP: {scan.ip_address}<br />
+                              <strong>Appareil:</strong> {
+                                scan.device_type === 'mobile' ? '📱 Mobile' :
+                                scan.device_type === 'tablet' ? '📱 Tablette' :
+                                '💻 Ordinateur'
+                              }<br />
+                              {scan.os_name && <><strong>OS:</strong> {scan.os_name} {scan.os_version}<br /></>}
+                              {scan.browser_name && <><strong>Navigateur:</strong> {scan.browser_name}<br /></>}
+                              <strong>IP:</strong> {scan.ip_address}<br />
                               {scan.isp && <><strong>ISP:</strong> {scan.isp}<br /></>}
                               {scan.is_vpn && <><strong>VPN:</strong> {scan.vpn_detection_method}<br /></>}
-                              Date: {new Date(scan.scanned_at).toLocaleString('fr-FR')}
+                              {scan.referrer && <><strong>Referrer:</strong> {new URL(scan.referrer).hostname}<br /></>}
+                              <strong>Date:</strong> {new Date(scan.scanned_at).toLocaleString('fr-FR')}
                             </div>
                           </Popup>
                         </Marker>
@@ -349,18 +384,32 @@ function App() {
                     <thead>
                       <tr>
                         <th>Date</th>
+                        <th>Appareil</th>
+                        <th>Système</th>
+                        <th>Navigateur</th>
                         <th>IP</th>
                         <th>VPN</th>
                         <th>ISP</th>
                         <th>Pays</th>
-                        <th>Ville</th>
-                        <th>User Agent</th>
+                        <th>Referrer</th>
                       </tr>
                     </thead>
                     <tbody>
                       {stats.scans.map((scan) => (
                         <tr key={scan.id} className={scan.is_vpn ? 'vpn-scan' : ''}>
                           <td>{new Date(scan.scanned_at).toLocaleString('fr-FR')}</td>
+                          <td>
+                            {scan.device_type === 'mobile' && '📱 Mobile'}
+                            {scan.device_type === 'tablet' && '📱 Tablette'}
+                            {scan.device_type === 'desktop' && '💻 Ordinateur'}
+                            {!scan.device_type && '-'}
+                          </td>
+                          <td>
+                            {scan.os_name ? `${scan.os_name}${scan.os_version ? ' ' + scan.os_version : ''}` : '-'}
+                          </td>
+                          <td>
+                            {scan.browser_name ? `${scan.browser_name}${scan.browser_version ? ' ' + scan.browser_version : ''}` : '-'}
+                          </td>
                           <td>{scan.ip_address}</td>
                           <td>
                             {scan.is_vpn ? (
@@ -372,9 +421,16 @@ function App() {
                             )}
                           </td>
                           <td>{scan.isp || '-'}</td>
-                          <td>{scan.country || '-'}</td>
-                          <td>{scan.city || '-'}</td>
-                          <td className="user-agent">{scan.user_agent}</td>
+                          <td>{scan.country || '-'} {scan.city ? `(${scan.city})` : ''}</td>
+                          <td>
+                            {scan.referrer ? (
+                              <span title={scan.referrer}>
+                                {new URL(scan.referrer).hostname}
+                              </span>
+                            ) : (
+                              <span className="direct-scan">Scan direct</span>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

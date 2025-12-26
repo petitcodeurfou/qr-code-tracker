@@ -60,11 +60,17 @@ async function initDatabase() {
         scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         is_vpn BOOLEAN DEFAULT FALSE,
         vpn_detection_method VARCHAR(50),
-        isp VARCHAR(255)
+        isp VARCHAR(255),
+        referrer TEXT,
+        device_type VARCHAR(50),
+        os_name VARCHAR(100),
+        os_version VARCHAR(50),
+        browser_name VARCHAR(100),
+        browser_version VARCHAR(50)
       )
     `);
 
-    // Ajouter colonnes VPN et ISP si elles n'existent pas
+    // Ajouter colonnes VPN, ISP, Referrer et Device info si elles n'existent pas
     await client.query(`
       DO $$
       BEGIN
@@ -85,6 +91,42 @@ async function initDatabase() {
           WHERE table_name='scans' AND column_name='isp'
         ) THEN
           ALTER TABLE scans ADD COLUMN isp VARCHAR(255);
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='scans' AND column_name='referrer'
+        ) THEN
+          ALTER TABLE scans ADD COLUMN referrer TEXT;
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='scans' AND column_name='device_type'
+        ) THEN
+          ALTER TABLE scans ADD COLUMN device_type VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='scans' AND column_name='os_name'
+        ) THEN
+          ALTER TABLE scans ADD COLUMN os_name VARCHAR(100);
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='scans' AND column_name='os_version'
+        ) THEN
+          ALTER TABLE scans ADD COLUMN os_version VARCHAR(50);
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='scans' AND column_name='browser_name'
+        ) THEN
+          ALTER TABLE scans ADD COLUMN browser_name VARCHAR(100);
+        END IF;
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name='scans' AND column_name='browser_version'
+        ) THEN
+          ALTER TABLE scans ADD COLUMN browser_version VARCHAR(50);
         END IF;
       END $$;
     `);
