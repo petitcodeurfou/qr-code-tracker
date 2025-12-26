@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test du Referrer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .warning {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .test-link {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .test-link:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test du Referrer</h1>
+
+        <div class="info">
+            <strong>📌 Comment utiliser cette page:</strong>
+            <ol>
+                <li>Entrez l'URL de tracking de votre QR code ci-dessous</li>
+                <li>Cliquez sur "Créer le lien de test"</li>
+                <li>Cliquez sur le lien vert qui apparaît</li>
+                <li>Vérifiez dans vos statistiques que le referrer apparaît</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Important:</strong>
+            <ul>
+                <li><strong>Scan direct de QR code = PAS de referrer</strong> (c'est normal!)</li>
+                <li>Le referrer n'apparaît que quand quelqu'un <strong>clique sur un lien</strong></li>
+                <li>Certains navigateurs bloquent le referrer en mode privé</li>
+            </ul>
+        </div>
+
+        <label for="trackingUrl">URL de tracking (ex: http://localhost:3001/track/abc123):</label>
+        <input type="text" id="trackingUrl" placeholder="http://localhost:3001/track/VOTRE_ID">
+
+        <button onclick="createTestLink()">Créer le lien de test</button>
+
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        function createTestLink() {
+            const url = document.getElementById('trackingUrl').value;
+            if (!url) {
+                alert('Veuillez entrer une URL de tracking!');
+                return;
+            }
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <h2>✅ Lien de test créé!</h2>
+                <p>Cliquez sur ce lien pour tester le referrer:</p>
+                <a href="${url}" class="test-link" target="_blank">
+                    🔗 Cliquer ici pour tester le Referrer
+                </a>
+                <p style="margin-top: 20px; color: #666;">
+                    <strong>Referrer attendu:</strong> ${window.location.href}<br>
+                    Quand vous cliquerez, le système verra que vous venez de cette page HTML!
+                </p>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -123,10 +123,17 @@ app.get('/track/:shortId', async (req, res) => {
     const deviceInfo = parser.getResult();
 
     const deviceType = deviceInfo.device.type || 'desktop'; // mobile, tablet, desktop
-    const osName = deviceInfo.os.name || null;
-    const osVersion = deviceInfo.os.version || null;
+    let osName = deviceInfo.os.name || null;
+    let osVersion = deviceInfo.os.version || null;
     const browserName = deviceInfo.browser.name || null;
     const browserVersion = deviceInfo.browser.version || null;
+
+    // Fix Windows 11: Microsoft fait exprès que Windows 11 utilise le même User Agent que Windows 10
+    // Il n'y a aucun moyen fiable de différencier les deux via le User Agent
+    // Solution: afficher "Windows 10+" pour indiquer que ça peut être Win10 ou Win11
+    if (osName === 'Windows' && osVersion === '10') {
+      osVersion = '10+'; // Indique Windows 10 ou 11
+    }
 
     // Détecter si c'est un VPN
     const vpnCheck = await vpnDetector.detect(ip);
